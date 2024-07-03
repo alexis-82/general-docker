@@ -1,0 +1,23 @@
+services:
+  db:
+    image: mysql:latest
+    restart: always
+    env_file:
+      - mysql.env
+    #environment:
+      #  - MYSQL_DATABASE=${DATABASE_NAME}
+      #  - MYSQL_USER=${DATABASE_USER}
+      #  - MYSQL_PASSWORD=${DATABASE_PASSWORD}
+      #  - MYSQL_ROOT_PASSWORD=${DATABASE_ROOT_PASSWORD}
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/data:/var/lib/mysql
+      #- ./mysql-config/my.cnf:/etc/mysql/conf.d/my.cnf  # Monta il file di configurazione custom
+    networks:
+      my_network:
+        ipv4_address: 192.168.1.100  # Assicurati che questo IP sia libero nella tua rete
+
+networks:
+  my_network:
+    external: true
+    name: my_network
