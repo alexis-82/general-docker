@@ -126,6 +126,13 @@ Questo ti permetterà di vedere gli indirizzi IP dei container `db` e `phpmyadmi
 
 Per rimuovere il bridge br0 dalla tua rete locale, segui questi passaggi:
 
+### Operazioni nel Docker
+```
+sudo systemctl stop docker
+sudo docker network ls
+sudo docker network rm ID my-network
+```
+
 1. **Disattiva il Bridge:**
 
    ```bash
