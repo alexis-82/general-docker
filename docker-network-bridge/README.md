@@ -100,6 +100,7 @@ Crea un nuovo bridge chiamato br0 e assegnagli un indirizzo IP:
 ```bash
 sudo brctl addbr br0
 sudo ip addr add 192.168.1.91/24 dev br0
+sudo brctl addif br0 ens32
 sudo ip link set br0 up
 ```
 
