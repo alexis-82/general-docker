@@ -86,106 +86,38 @@ Prima di tutto, ferma il servizio Docker:
 sudo systemctl stop docker
 ```
 
-Rimuovi l'interfaccia docker0 esistente:
+
+Modificare la propria rete in /etc/netplan/01-network.yaml (Brdige Static):
 
 ```bash
-sudo ip link set docker0 down
-sudo brctl delbr docker0
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    ens32:
+      dhcp4: no
+  bridges:
+    br0:
+      dhcp4: no
+      addresses: [192.168.1.100/24]
+      nameservers:
+        addresses: [8.8.8.8, 8.8.4.4]
+      routes:
+        - to: default
+          via: 192.168.1.1
+          on-link: true
+      interfaces:
+        - ens32
 ```
 
-Crea un nuovo bridge chiamato br0 e assegnagli un indirizzo IP:
+Ora con il comando ip a avrai un device br0.
+
+Adesso verificare la presenza di un pacchetto:
 
 ```bash
-sudo brctl addbr br0
-sudo ip addr add 192.168.1.91/24 dev br0
-sudo ip link set br0 up
+sudo apt install python3-distutils-extra
 ```
 
-Aggiungi la tua interfaccia di rete (ad esempio, ens33) al bridge:
-
-```bash
-ip a
-sudo brctl addif br0 ens33
-```
-
-Modifica la configurazione di Docker per utilizzare br0 invece di docker0. Crea o modifica il file `/etc/docker/daemon.json`:
-
-```bash
-sudo vim /etc/docker/daemon.json
-```
-
-Aggiungi o modifica il contenuto come segue:
-
-```json
-{
-  "bridge": "br0",
-  "fixed-cidr": "192.168.1.100/27"
-}
-```
-
-Questo assegnerà ai container Docker indirizzi IP nel range 192.168.1.100 - 192.168.1.223.
-
-Riavvia il servizio Docker:
-
-```bash
-sudo systemctl start docker
-```
-
-Modifica il tuo file `docker-compose.yml` per usare la rete del bridge:
-
-```yaml
-services:
-  db:
-    image: mysql
-    ports:
-      - "3306:3306"
-    restart: always
-    env_file:
-      - mysql.env
-    volumes:
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./database/data:/var/lib/mysql
-    network_mode: bridge
-
-  phpmyadmin:
-    image: phpmyadmin
-    restart: always
-    depends_on:
-      - db
-    env_file:
-      - phpmyadmin.env
-    ports:
-      - "8080:80"
-    environment:
-      PMA_HOST: db
-      PMA_PORT: 3306
-      PMA_ARBITRARY: 1
-    network_mode: bridge
-
-volumes:
-  db-data:
-```
-
-Riavvia i tuoi container:
-
-```bash
-sudo docker-compose down
-sudo docker-compose up -d
-```
-
-Ora i tuoi container Docker utilizzeranno il bridge network `br0` che hai configurato.
-
-Per verificare gli indirizzi IP assegnati ai container:
-
-```bash
-sudo docker-compose ps
-
-sudo docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker-compose-mysql-phpmyadmin-db-1
-
-sudo docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker-compose-mysql-phpmyadmin-phpmyadmin-1
-```
-
-Questo ti permetterà di vedere gli indirizzi IP dei container `db` e `phpmyadmin` assegnati dalla rete del bridge `br0`.
 
 ---
 
@@ -194,70 +126,3 @@ Questo ti permetterà di vedere gli indirizzi IP dei container `db` e `phpmyadmi
 [![Screenshot-20240702-001820.png](https://i.postimg.cc/NfjsZCD0/Screenshot-20240702-001820.png)](https://postimg.cc/kDLPbckr)
 
 ---
-
-## Rimozione del Bridge br0 dalla Rete Locale
-
-Per rimuovere il bridge br0 dalla tua rete locale, segui questi passaggi:
-
-### Operazioni nel Docker
-```
-sudo systemctl stop docker
-sudo docker network ls
-sudo docker network rm ID my-network
-```
-
-1. **Disattiva il Bridge:**
-
-   ```bash
-   sudo ip link set br0 down
-   ```
-
-2. **Rimuovi le Interfacce dal Bridge:**
-
-   Se hai aggiunto `ens33` al bridge, rimuovila:
-
-   ```bash
-   sudo brctl delif br0 ens33
-   ```
-
-3. **Elimina il Bridge:**
-
-   ```bash
-   sudo brctl delbr br0
-   ```
-
-4. **Ripristina la Configurazione di Rete:**
-
-   Se hai modificato la configurazione di rete per usare `br0`, dovrai ripristinare la configurazione originale. Edita il file di configurazione dell'interfaccia (es. `/etc/network/interfaces`).
-
-5. **Ripristina la Configurazione di Docker (Se Applicabile):**
-
-   Se hai modificato la configurazione di Docker per usare `br0`, modifica o rimuovi la configurazione nel file `/etc/docker/daemon.json`.
-
-6. **Riavvia il Servizio di Rete:**
-
-   - Per sistemi che usano il comando systemctl:
-
-     ```bash
-     sudo systemctl restart networking
-     ```
-
-   - Per sistemi che usano Netplan:
-
-     ```bash
-     sudo netplan apply
-     ```
-
-7. **Riavvia il Servizio Docker:**
-
-   ```bash
-   sudo systemctl restart docker
-   ```
-
-8. **Verifica:**
-
-   Infine, verifica che `br0` sia stato rimosso e che la tua configurazione di rete sia tornata alla normalità:
-
-   ```bash
-   ip a
-   ```
