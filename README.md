@@ -55,20 +55,31 @@ docker-compose --version
 
 ### Scaricare Docker Compose V2
 ```bash
-mkdir -p ~/.docker/cli-plugins/
-curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
+curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
 ```
 
-[Link Ufficiale](https://github.com/docker/compose "Link")
+[Link Ufficiale](https://docs.docker.com/compose/install/standalone/ "Link")
 
 ### Rendere eseguibile Docker Compose V2
+
+#### Ubuntu (sudo)
 ```bash
-chmod +x ~/.docker/cli-plugins/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+sudo usermod -aG docker $USER
+sudo chgrp docker /usr/local/bin/docker-compose
+sudo chmod 750 /usr/local/bin/docker-compose
+```
+
+#### Debian (su)
+```bash
+chmod +x /usr/local/bin/docker-compose
+chown -R docker $USER
+chmod 750 /usr/local/bin/docker-compose
 ```
 
 ### Verificare l'installazione
 ```bash
-docker compose version
+docker-compose version
 ```
 
 Nota: Assicurati di utilizzare la versione più recente di Docker Compose V2 sostituendo `v2.23.3` con l'ultima versione disponibile al momento dell'installazione.
