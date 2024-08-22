@@ -10,6 +10,7 @@ Il bridge network può essere configurato tramite Docker Compose per definire co
 Prima di tutto, ferma il servizio Docker:
 
 ```bash
+sudo systemctl stop docker.socket
 sudo systemctl stop docker
 ```
 Modifica la configurazione di Docker, modifica il file `/lib/systemd/system/docker.service`:
@@ -83,6 +84,7 @@ volumes:
 Prima di tutto, ferma il servizio Docker:
 
 ```bash
+sudo systemctl stop docker.socket
 sudo systemctl stop docker
 ```
 
