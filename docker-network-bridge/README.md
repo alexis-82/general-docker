@@ -6,8 +6,79 @@ In pratica, i bridge network in Docker permettono di far comunicare i container 
 
 Il bridge network può essere configurato tramite Docker Compose per definire come i container devono essere collegati e come devono comunicare tra loro e con il mondo esterno.
 
+## Configurazione facile di Bridge Network in Docker
+Prima di tutto, ferma il servizio Docker:
 
-## Configurazione di Bridge Network in Docker
+```bash
+sudo systemctl stop docker
+```
+Modifica la configurazione di Docker, modifica il file `/lib/systemd/system/docker.service`:
+
+```bash
+sudo vim /lib/systemd/system/docker.service
+```
+
+Modifica il contenuto come segue:
+
+```json
+ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock --bip "192.168.1.100/27"
+```
+
+Questo assegnerà ai container Docker indirizzi IP nel range 192.168.1.100 - 192.168.1.223.
+
+Riavvia il servizio Docker:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl start docker
+```
+
+Con questo metodo possiamo assegnare al network docker0 la stessa classe di indirizzo IP della nostra rete.
+  
+### Esempio di file docker-compose.yml
+
+```yaml
+services:
+  db:
+    image: mysql
+    ports:
+      - "3306:3306"
+    restart: always
+    env_file:
+      - mysql.env
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/data:/var/lib/mysql
+    networks: 
+    	  - db_bridge
+
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    depends_on:
+      - db
+    env_file:
+      - phpmyadmin.env
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    networks: 
+    	  - db_bridge
+    
+networks:
+  db_network:
+    driver: bridge
+
+volumes:
+  db-data:
+```
+  
+---  
+  
+## Configurazione avanzata di Bridge Network in Docker
 
 Prima di tutto, ferma il servizio Docker:
 
@@ -48,11 +119,11 @@ Aggiungi o modifica il contenuto come segue:
 ```json
 {
   "bridge": "br0",
-  "fixed-cidr": "192.168.1.192/27"
+  "fixed-cidr": "192.168.1.100/27"
 }
 ```
 
-Questo assegnerà ai container Docker indirizzi IP nel range 192.168.1.192 - 192.168.1.223.
+Questo assegnerà ai container Docker indirizzi IP nel range 192.168.1.100 - 192.168.1.223.
 
 Riavvia il servizio Docker:
 
@@ -117,6 +188,8 @@ sudo docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}
 Questo ti permetterà di vedere gli indirizzi IP dei container `db` e `phpmyadmin` assegnati dalla rete del bridge `br0`.
 
 ---
+
+
 
 [![Screenshot-20240702-001820.png](https://i.postimg.cc/NfjsZCD0/Screenshot-20240702-001820.png)](https://postimg.cc/kDLPbckr)
 
