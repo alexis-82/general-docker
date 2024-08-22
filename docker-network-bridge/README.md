@@ -104,13 +104,6 @@ sudo brctl addif br0 ens32
 sudo ip link set br0 up
 ```
 
-Aggiungi la tua interfaccia di rete (ad esempio, ens33) al bridge:
-
-```bash
-ip a
-sudo brctl addif br0 ens33
-```
-
 Modifica la configurazione di Docker per utilizzare br0 invece di docker0. Crea o modifica il file `/etc/docker/daemon.json`:
 
 ```bash
