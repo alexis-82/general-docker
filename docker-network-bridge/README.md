@@ -51,7 +51,7 @@ services:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./database/data:/var/lib/mysql
     networks:
-      - db_bridge
+      - db_network
 
   phpmyadmin:
     image: phpmyadmin
@@ -67,7 +67,7 @@ services:
       PMA_PORT: 3306
       PMA_ARBITRARY: 1
     networks:
-      - db_bridge
+      - db_network
 
 networks:
   db_network:
