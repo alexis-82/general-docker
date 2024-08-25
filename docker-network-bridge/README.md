@@ -28,7 +28,7 @@ services:
     container_name: mysql_db
     restart: always
     env_file:
-      - mysql.env
+      - ./mysql.env
     volumes:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./database/data:/var/lib/mysql
@@ -49,7 +49,7 @@ services:
       db:
         condition: service_healthy
     env_file:
-      - phpmyadmin.env
+      - ./phpmyadmin.env
     ports:
       - "8080:80"
     networks:
@@ -60,6 +60,9 @@ networks:
   my_macvlan_network:
     external: true
     name: my_macvlan_network
+    
+volumes:
+  database:
 ```
 
 Configurazione del file `phpmyadmin.env` e di `mysql.env`:
@@ -74,6 +77,7 @@ MEMORY_LIMIT=512M
 
 mysql.env:
 ```
+MYSQL_ROOT_PASSWORD=admin
 MYSQL_USER=user
 MYSQL_PASSWORD=userpassword
 MYSQL_DATABASE=mydb
@@ -99,54 +103,6 @@ docker exec -it phpmyadmin apt-get update
 docker exec -it phpmyadmin apt-get install -y iputils-ping
 docker exec -it phpmyadmin ping 192.168.1.200
 
-```
-
-### Configurazione della Password di Root
-
-Arresta il container MySQL:
-
-```bash
-docker compose stop db
-```
-Avvia il container con l'opzione per ignorare i privilegi:
-
-Modifica temporaneamente il file docker-compose.yml con il flag `--skip-grant-tables` per poter accedere senza password:
-
-```yaml
-services:
-  db:
-    image: mysql:latest
-    command: --skip-grant-tables
-    ...
-```
-
-Avvia nuovamente il container:
-
-```bash
-docker compose up -d db
-```
-
-Accedi al database MySQL:
-
-```bash
-docker exec -it mysql_db mysql -u root
-```
-
-Una volta all'interno del client MySQL:
-
-```sql
-FLUSH PRIVILEGES;
-ALTER USER 'root'@'localhost' IDENTIFIED BY 'nuova_password';
-ALTER USER 'root'@'%' IDENTIFIED BY 'nuova_password';
-```
-
-Riavvia il container senza il flag --skip-grant-tables:
-
-Ripristina il file docker-compose.yml e riavvia:
-
-```bash
-docker compose down
-docker compose up -d
 ```
 ---
 
