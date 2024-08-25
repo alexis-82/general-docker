@@ -1,13 +1,10 @@
 # Installazione di Docker Compose V2 su Linux
 
-### Scaricare Docker Compose V2
-```bash
-curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
-```
+
 
 [Guida Ufficiale](https://docs.docker.com/engine/install/ "Link")
 
-### Rendere eseguibile Docker Compose V2
+### Scaricare Docker Compose V2
 
 #### Debian
 ```bash
@@ -34,11 +31,10 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 
 #### Procedura per la configurazione del Gruppo
 ```bash
-sudo apt-get install docker.io
 sudo groupadd docker
 sudo usermod -aG docker <nome_utente>
 sudo chown $USER:$USER /var/run/docker.sock
-sudo systemctl restart docke
+sudo systemctl restart docker
 ```
 
 Verifichiamo che funzioni tutto correttamente:
@@ -76,11 +72,10 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 
 #### Procedura per la configurazione del Gruppo
 ```bash
-sudo apt-get install docker.io
 sudo groupadd docker
 sudo usermod -aG docker <nome_utente>
 sudo chown $USER:$USER /var/run/docker.sock
-sudo systemctl restart docke
+sudo systemctl restart docker
 ```
 
 Verifichiamo che funzioni tutto correttamente:
@@ -92,5 +87,3 @@ docker info
 ```bash
 docker compose version
 ```
-
-Nota: Assicurati di utilizzare la versione più recente di Docker Compose V2 sostituendo `v2.23.3` con l'ultima versione disponibile al momento dell'installazione.
