@@ -7,7 +7,7 @@ Per configurare Docker Compose con MySQL e phpMyAdmin, crea un file docker-compo
 
 ## Prerequisiti
 
--   Docker e Docker Compose installati sul tuo sistema
+-   Docker e Docker Compose V2 installati sul tuo sistema
 -   Conoscenza base di YAML e Docker
 
 ## Passi per la configurazione
@@ -21,31 +21,22 @@ services:
   db:
     image: mysql:latest
     restart: always
-    env_file:
-      - mysql.env
+	env_file:
+	  - ./mysql.env
     volumes:
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./database/data:/var/lib/mysql
-      #- ./mysql-config/my.cnf:/etc/mysql/conf.d/my.cnf  # Monta il file di configurazione custom
-    networks:
-      my_custom_network:
-        ipv4_address: 192.168.1.200  # Assicurati che questo IP sia libero nella tua rete
+      - ./mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
 
   phpmyadmin:
-    image: phpmyadmin:latest
+    image: phpmyadmin/phpmyadmin:latest
     restart: always
     depends_on:
       - db
-    env_file:
-      - phpmyadmin.env
-    networks:
-      my_custom_network:
-        ipv4_address: 192.168.1.230 # Assicurati che questo IP sia libero nella tua rete
-
-networks:
-  my_custom_network:
-    external: true
-    name: my_custom_network
+	env_file:
+	  - ./phpmyadmin.env
+    ports:
+      - "8080:80"
 ```
 
 2. **Crea i file .env**
@@ -63,7 +54,7 @@ networks:
 
     ```
     # Impostazioni di phpMyAdmin
-    PMA_HOST: 192.168.1.200
+    PMA_HOST: db
     PMA_PORT: 3306
     PMA_ARBITRARY: 1
     UPLOAD_LIMIT=300M
@@ -76,28 +67,22 @@ networks:
     PMA_THEME=pmahomme
     ```
 
-3. **Configurazione della rete**
-    ```bash
-    sudo docker network create --subnet=192.168.1.0/24 my_custom_network
-
-    ```
-
-4. **Avvia i container**
+3. **Avvia i container**
 
     Esegui il seguente comando nella directory del progetto:
 
     ```
-    docker-compose up -d
+    docker compose up -d
     ```
 
-5. **Accedi a phpMyAdmin**
+4. **Accedi a phpMyAdmin**
 
     Apri un browser e vai a: `http://localhost:8080`  
 
     oppure prima visualizza i container avviati:
 
     ```bash
-    docker-compose ps
+    docker compose ps
     ```
 
     e esegui da terminale:
@@ -118,5 +103,5 @@ networks:
     Quando hai finito, puoi fermare i container con:
 
     ```
-    docker-compose down
+    docker compose down
     ```

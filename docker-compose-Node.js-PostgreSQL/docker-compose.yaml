@@ -10,7 +10,7 @@ services:
       - ./scripts/full.sql:/docker-entrypoint-initdb.d/full.sql
     restart: always
     env_file:
-      - postgres.env
+      - ./postgres.env
 
   web:
     image: web_node-node
@@ -18,6 +18,6 @@ services:
     ports:
       - "8080:8080"
     env_file:
-      - node.env
+      - ./node.env
     depends_on:
       - db
