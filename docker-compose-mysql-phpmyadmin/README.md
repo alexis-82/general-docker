@@ -21,8 +21,8 @@ services:
   db:
     image: mysql:latest
     restart: always
-	env_file:
-	  - ./mysql.env
+    env_file:
+      - ./mysql.env
     volumes:
       - ./mysql_data:/var/lib/mysql
     ports:
@@ -33,8 +33,8 @@ services:
     restart: always
     depends_on:
       - db
-	env_file:
-	  - ./phpmyadmin.env
+    env_file:
+      - ./phpmyadmin.env
     ports:
       - "8080:80"
 ```
