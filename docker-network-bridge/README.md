@@ -6,44 +6,26 @@ In pratica, i bridge network in Docker permettono di far comunicare i container 
 
 Il bridge network può essere configurato tramite Docker Compose per definire come i container devono essere collegati e come devono comunicare tra loro e con il mondo esterno.
 
-## Configurazione facile di Bridge Network in Docker
-Prima di tutto, ferma il servizio Docker:
+## Configurazione Bridge Network in Docker
+Prima di tutto crea la rete `macvlan`:
 
 ```bash
-sudo systemctl stop docker.socket
-sudo systemctl stop docker
-```
-Modifica la configurazione di Docker, modifica il file `/lib/systemd/system/docker.service`:
-
-```bash
-sudo vim /lib/systemd/system/docker.service
+docker network create -d macvlan \
+  --subnet=192.168.1.0/24 \
+  --gateway=192.168.1.1 \
+  -o parent=ens32 \
+  my_macvlan_network
 ```
 
-Modifica il contenuto come segue:
-
-```json
-ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock --bip "192.168.1.100/27"
-```
-
-Questo assegnerà ai container Docker indirizzi IP nel range 192.168.1.100 - 192.168.1.223.
-
-Riavvia il servizio Docker:
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl start docker
-```
-
-Con questo metodo possiamo assegnare al network docker0 la stessa classe di indirizzo IP della nostra rete.
+`-o parent=en32`: inserire il nome della vostra interfaccia fisica
 
 ### Esempio di file docker-compose.yml
 
 ```yaml
 services:
   db:
-    image: mysql
-    ports:
-      - "3306:3306"
+    image: mysql:latest
+    container_name: mysql_db
     restart: always
     env_file:
       - mysql.env
@@ -51,209 +33,124 @@ services:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./database/data:/var/lib/mysql
     networks:
-    	  - db_bridge
+      my_macvlan_network:
+        ipv4_address: 192.168.1.200  # Cambia l'indirizzo IP in base alla tua rete
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   phpmyadmin:
-    image: phpmyadmin
+    image: phpmyadmin:latest
+    container_name: phpmyadmin
     restart: always
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     env_file:
       - phpmyadmin.env
     ports:
       - "8080:80"
-    environment:
-      PMA_HOST: db
-      PMA_PORT: 3306
-      PMA_ARBITRARY: 1
     networks:
-    	  - db_bridge
+      my_macvlan_network:
+        ipv4_address: 192.168.1.201  # Cambia l'indirizzo IP in base alla tua rete
 
 networks:
-  db_network:
-    driver: bridge
-
-volumes:
-  db-data:
+  my_macvlan_network:
+    external: true
+    name: my_macvlan_network
 ```
 
----
+Configurazione del file `phpmyadmin.env` e di `mysql.env`:
 
-## Configurazione avanzata di Bridge Network in Docker
+phpmyadmin.env:
+```
+PMA_HOST=192.168.1.200
+PMA_PORT=3306
+UPLOAD_LIMIT=300M
+MEMORY_LIMIT=512M
+```
 
-Prima di tutto, ferma il servizio Docker:
+mysql.env:
+```
+MYSQL_USER=user
+MYSQL_PASSWORD=userpassword
+MYSQL_DATABASE=mydb
+
+# Opzioni aggiuntive (opzionali)
+MYSQL_ALLOW_EMPTY_PASSWORD=no
+MYSQL_RANDOM_ROOT_PASSWORD=no
+MYSQL_ONETIME_PASSWORD=no
+
+# Configurazione del server (opzionale)
+MYSQL_CHARACTER_SET_SERVER=utf8mb4
+MYSQL_COLLATION_SERVER=utf8mb4_unicode_ci
+```
+
+Avvia il container:
+```bash
+docker compose up -d
+```
+
+Ora verifica se i container possono pingarsi tra di loro:
+```bash
+docker exec -it phpmyadmin apt-get update
+docker exec -it phpmyadmin apt-get install -y iputils-ping
+docker exec -it phpmyadmin ping 192.168.1.200
+
+```
+
+### Configurazione della Password di Root
+
+Arresta il container MySQL:
 
 ```bash
-sudo systemctl stop docker.socket
-sudo systemctl stop docker
+docker compose stop db
 ```
+Avvia il container con l'opzione per ignorare i privilegi:
 
-Rimuovi l'interfaccia docker0 esistente:
-
-```bash
-sudo ip link set docker0 down
-sudo brctl delbr docker0
-```
-
-Crea un nuovo bridge chiamato br0 e assegnagli un indirizzo IP:
-
-```bash
-sudo brctl addbr br0
-sudo ip addr add 192.168.1.91/24 dev br0
-sudo brctl addif br0 ens32
-sudo ip link set br0 up
-```
-
-Modifica la configurazione di Docker per utilizzare br0 invece di docker0. Crea o modifica il file `/etc/docker/daemon.json`:
-
-```bash
-sudo vim /etc/docker/daemon.json
-```
-
-Aggiungi o modifica il contenuto come segue:
-
-```json
-{
-  "bridge": "br0",
-  "fixed-cidr": "192.168.1.100/27"
-}
-```
-
-Questo assegnerà ai container Docker indirizzi IP nel range 192.168.1.100 - 192.168.1.223.
-
-Riavvia il servizio Docker:
-
-```bash
-sudo systemctl start docker
-```
-
-Modifica il tuo file `docker-compose.yml` per usare la rete del bridge:
+Modifica temporaneamente il file docker-compose.yml con il flag `--skip-grant-tables` per poter accedere senza password:
 
 ```yaml
 services:
   db:
-    image: mysql
-    ports:
-      - "3306:3306"
-    restart: always
-    env_file:
-      - mysql.env
-    volumes:
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./database/data:/var/lib/mysql
-    network_mode: bridge
-
-  phpmyadmin:
-    image: phpmyadmin
-    restart: always
-    depends_on:
-      - db
-    env_file:
-      - phpmyadmin.env
-    ports:
-      - "8080:80"
-    environment:
-      PMA_HOST: db
-      PMA_PORT: 3306
-      PMA_ARBITRARY: 1
-    network_mode: bridge
-
-volumes:
-  db-data:
+    image: mysql:latest
+    command: --skip-grant-tables
+    ...
 ```
 
-Riavvia i tuoi container:
+Avvia nuovamente il container:
 
 ```bash
-sudo docker-compose down
-sudo docker-compose up -d
+docker compose up -d db
 ```
 
-Ora i tuoi container Docker utilizzeranno il bridge network `br0` che hai configurato.
-
-Per verificare gli indirizzi IP assegnati ai container:
+Accedi al database MySQL:
 
 ```bash
-sudo docker-compose ps
-
-sudo docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker-compose-mysql-phpmyadmin-db-1
-
-sudo docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker-compose-mysql-phpmyadmin-phpmyadmin-1
+docker exec -it mysql_db mysql -u root
 ```
 
-Questo ti permetterà di vedere gli indirizzi IP dei container `db` e `phpmyadmin` assegnati dalla rete del bridge `br0`.
+Una volta all'interno del client MySQL:
 
+```sql
+FLUSH PRIVILEGES;
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'nuova_password';
+ALTER USER 'root'@'%' IDENTIFIED BY 'nuova_password';
+```
+
+Riavvia il container senza il flag --skip-grant-tables:
+
+Ripristina il file docker-compose.yml e riavvia:
+
+```bash
+docker compose down
+docker compose up -d
+```
 ---
-
 
 
 [![Screenshot-20240702-001820.png](https://i.postimg.cc/NfjsZCD0/Screenshot-20240702-001820.png)](https://postimg.cc/kDLPbckr)
 
 ---
-
-## Rimozione del Bridge br0 dalla Rete Locale
-
-Per rimuovere il bridge br0 dalla tua rete locale, segui questi passaggi:
-
-### Operazioni nel Docker
-```
-sudo systemctl stop docker
-sudo docker network ls
-sudo docker network rm ID my-network
-```
-
-1. **Disattiva il Bridge:**
-
-   ```bash
-   sudo ip link set br0 down
-   ```
-
-2. **Rimuovi le Interfacce dal Bridge:**
-
-   Se hai aggiunto `ens33` al bridge, rimuovila:
-
-   ```bash
-   sudo brctl delif br0 ens33
-   ```
-
-3. **Elimina il Bridge:**
-
-   ```bash
-   sudo brctl delbr br0
-   ```
-
-4. **Ripristina la Configurazione di Rete:**
-
-   Se hai modificato la configurazione di rete per usare `br0`, dovrai ripristinare la configurazione originale. Edita il file di configurazione dell'interfaccia (es. `/etc/network/interfaces`).
-
-5. **Ripristina la Configurazione di Docker (Se Applicabile):**
-
-   Se hai modificato la configurazione di Docker per usare `br0`, modifica o rimuovi la configurazione nel file `/etc/docker/daemon.json`.
-
-6. **Riavvia il Servizio di Rete:**
-
-   - Per sistemi che usano il comando systemctl:
-
-     ```bash
-     sudo systemctl restart networking
-     ```
-
-   - Per sistemi che usano Netplan:
-
-     ```bash
-     sudo netplan apply
-     ```
-
-7. **Riavvia il Servizio Docker:**
-
-   ```bash
-   sudo systemctl restart docker
-   ```
-
-8. **Verifica:**
-
-   Infine, verifica che `br0` sia stato rimosso e che la tua configurazione di rete sia tornata alla normalità:
-
-   ```bash
-   ip a
-   ```

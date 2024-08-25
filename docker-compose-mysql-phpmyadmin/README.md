@@ -23,18 +23,13 @@ services:
     restart: always
     env_file:
       - mysql.env
-    #environment:
-      #  - MYSQL_DATABASE=${DATABASE_NAME}
-      #  - MYSQL_USER=${DATABASE_USER}
-      #  - MYSQL_PASSWORD=${DATABASE_PASSWORD}
-      #  - MYSQL_ROOT_PASSWORD=${DATABASE_ROOT_PASSWORD}
     volumes:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./database/data:/var/lib/mysql
       #- ./mysql-config/my.cnf:/etc/mysql/conf.d/my.cnf  # Monta il file di configurazione custom
     networks:
       my_custom_network:
-        ipv4_address: 192.168.1.100  # Assicurati che questo IP sia libero nella tua rete
+        ipv4_address: 192.168.1.200  # Assicurati che questo IP sia libero nella tua rete
 
   phpmyadmin:
     image: phpmyadmin:latest
@@ -43,10 +38,6 @@ services:
       - db
     env_file:
       - phpmyadmin.env
-    environment:
-      PMA_HOST: 192.168.1.100
-      PMA_PORT: 3306
-      PMA_ARBITRARY: 1
     networks:
       my_custom_network:
         ipv4_address: 192.168.1.230 # Assicurati che questo IP sia libero nella tua rete
@@ -72,7 +63,9 @@ networks:
 
     ```
     # Impostazioni di phpMyAdmin
-    PMA_ARBITRARY=1
+    PMA_HOST: 192.168.1.200
+    PMA_PORT: 3306
+    PMA_ARBITRARY: 1
     UPLOAD_LIMIT=300M
     MEMORY_LIMIT=512M
 
@@ -127,9 +120,3 @@ networks:
     ```
     docker-compose down
     ```
-
-## Note aggiuntive
-
--   Assicurati di non committare il file `.env` nel controllo versione.
--   Per la produzione, considera l'uso di segreti Docker per gestire le credenziali in modo più sicuro.
--   Personalizza le configurazioni in base alle tue esigenze specifiche.
