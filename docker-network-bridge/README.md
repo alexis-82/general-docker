@@ -60,7 +60,7 @@ networks:
   my_macvlan_network:
     external: true
     name: my_macvlan_network
-    
+
 volumes:
   database:
 ```
@@ -69,27 +69,26 @@ Configurazione del file `phpmyadmin.env` e di `mysql.env`:
 
 phpmyadmin.env:
 ```
-PMA_HOST=192.168.1.200
+# Impostazioni di phpMyAdmin
+PMA_HOST=db
 PMA_PORT=3306
+PMA_ARBITRARY=1
 UPLOAD_LIMIT=300M
 MEMORY_LIMIT=512M
+
+# Lingua di default (opzionale)
+PMA_LANGUAGE=italian
+
+# Tema di default (opzionale)
+PMA_THEME=pmahomme
 ```
 
 mysql.env:
 ```
-MYSQL_ROOT_PASSWORD=admin
-MYSQL_USER=user
-MYSQL_PASSWORD=userpassword
+MYSQL_ROOT_PASSWORD=mypassword
 MYSQL_DATABASE=mydb
-
-# Opzioni aggiuntive (opzionali)
-MYSQL_ALLOW_EMPTY_PASSWORD=no
-MYSQL_RANDOM_ROOT_PASSWORD=no
-MYSQL_ONETIME_PASSWORD=no
-
-# Configurazione del server (opzionale)
-MYSQL_CHARACTER_SET_SERVER=utf8mb4
-MYSQL_COLLATION_SERVER=utf8mb4_unicode_ci
+MYSQL_USER=myuser
+MYSQL_PASSWORD=mypassword
 ```
 
 Avvia il container:

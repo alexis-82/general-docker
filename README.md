@@ -32,6 +32,20 @@ sudo apt-get update
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
+#### Procedura per la configurazione del Gruppo
+```bash
+sudo apt-get install docker.io
+sudo groupadd docker
+sudo usermod -aG docker <nome_utente>
+sudo chown $USER:$USER /var/run/docker.sock
+sudo systemctl restart docke
+```
+
+Verifichiamo che funzioni tutto correttamente:
+```bash
+docker info
+```
+
 ### Verificare l'installazione
 ```bash
 docker compose version
@@ -58,6 +72,20 @@ sudo apt-get update
 #### Installazione pacchetti
 ```bash
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+#### Procedura per la configurazione del Gruppo
+```bash
+sudo apt-get install docker.io
+sudo groupadd docker
+sudo usermod -aG docker <nome_utente>
+sudo chown $USER:$USER /var/run/docker.sock
+sudo systemctl restart docke
+```
+
+Verifichiamo che funzioni tutto correttamente:
+```bash
+docker info
 ```
 
 ### Verificare l'installazione
