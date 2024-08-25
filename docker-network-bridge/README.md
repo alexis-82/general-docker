@@ -33,6 +33,7 @@ services:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./database/data:/var/lib/mysql
     networks:
+<<<<<<< HEAD
       my_macvlan_network:
         ipv4_address: 192.168.1.200  # Cambia l'indirizzo IP in base alla tua rete
     healthcheck:
@@ -40,6 +41,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+=======
+      - db_network
+>>>>>>> 3e3223a5767909683db790f3e5f414a447151a74
 
   phpmyadmin:
     image: phpmyadmin:latest
@@ -53,8 +57,12 @@ services:
     ports:
       - "8080:80"
     networks:
+<<<<<<< HEAD
       my_macvlan_network:
         ipv4_address: 192.168.1.201  # Cambia l'indirizzo IP in base alla tua rete
+=======
+      - db_network
+>>>>>>> 3e3223a5767909683db790f3e5f414a447151a74
 
 networks:
   my_macvlan_network:
