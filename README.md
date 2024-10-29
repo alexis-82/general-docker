@@ -2,7 +2,7 @@
 
 
 
-[Guida Ufficiale](https://docs.docker.com/engine/install/ "Link")
+* [Lista Comandi](#commands) - [Guida Ufficiale](https://docs.docker.com/engine/install/ "Link")
 
 ### Scaricare Docker Compose V2
 
@@ -90,7 +90,7 @@ docker compose version
 
 ---
 
-# Comandi Principali di Docker
+# Comandi Principali di Docker {#commands}
 
 Ecco alcuni dei comandi principali di Docker che potrebbero esserti utili:
 
