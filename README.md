@@ -103,7 +103,7 @@ Ecco alcuni dei comandi principali di Docker che potrebbero esserti utili:
 - `docker exec`: Esegue un comando all'interno di un contenitore in esecuzione.
 - `docker images --filter=since=ID`: Mostra l'elenco delle immagini figlie dirette o indirette.
 - `docker image rmi -f ID`: Eliminazione forzata dell'immagine.
-- `docker container ls`: Visualizza la lista dei container.
+- `docker container ls -a`: Visualizza la lista dei container.
 - `docker container rm ID`: Eliminazione del container.
 - `docker container stop $nomeContainer`: Ferma l'esecuzione del container.
 - `docker container inspect $nomeContainer`: Eseguirà l'ispezione del container in JSON.
@@ -124,6 +124,10 @@ Ecco alcuni dei comandi principali di Docker che potrebbero esserti utili:
 - `docker volume ls`: Comando per vedere la lista dei volumi creati.
 - `docker volume inspect $nomeVolume`: Eseguirà l'ispezione del volume in JSON.
 - `docker run -d --name $nomeNodo -v NOME_VOLUME:CONTAINER_PATH $nomeImmagine`: Avviamo il container con montato il volume creato.
+- `docker volume prune -a`: Elimina tutti i volumi.
+
+## Pulizia generica
+- `docker system prune -a --volumes`: Rimuovere tutti i contenitori, le reti, le immagini (sia sospese che inutilizzate) e, facoltativamente, i volumi inutilizzati.
 
 ---
 
@@ -140,7 +144,7 @@ Here are some of the key Docker commands that might be useful:
 - `docker exec`: Executes a command within a running container.
 - `docker images --filter=since=ID`: Displays the list of direct or indirect child images.
 - `docker image rmi -f ID`: Forced deletion of the image.
-- `docker container ls`: Displays the list of containers.
+- `docker container ls -a`: Displays the list of containers.
 - `docker container rm ID`: Deleting the container.
 - `docker container stop $containerName`: Stops the execution of the container.
 - `docker container inspect $containerName`: Will inspect the container in JSON format.
@@ -162,3 +166,7 @@ Here are some of the key Docker commands that might be useful:
 - `docker volume ls`: Command to see the list of created volumes.
 - `docker volume inspect $nomeVolume`: Will inspect the volume in JSON format.
 - `docker run -d --name $nomeNodo -v NOME_VOLUME:CONTAINER_PATH $nomeImmagine`: We start the container with the created volume mounted.
+- `docker volume prune -a`: Delete all volumes.
+
+## General cleaning
+- `docker system prune -a --volumes`: Remove all unused containers, networks, images (both dangling and unused), and optionally, volumes.
